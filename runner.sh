@@ -13,26 +13,28 @@ credstash_ssh_key_con=${CREDSTASH_SSH_KEY_CON:-null}
 #if configured with queue
 if [ "${queue}" != "null" ]
 then
-# Fetch message and extract the s3_path, playbook, role, etc
-    echo "attempting to fetch message from: ${queue}"
-    result=$( \
-        aws sqs receive-message \
-            --output=json \
-            --queue-url ${queue} \
-            --region ${region} \
-            --wait-time-seconds ${wait_time} \
-            --query Messages[0].[Body,ReceiptHandle])
-    if [ "$?" != 0 ]
-    then
-        exit 1
-    fi
+    receipt_handle="null"
+    while [ "${receipt_handle}" = "null" ]; do
+    # Fetch message and extract the s3_path, playbook, role, etc
+        echo "attempting to fetch message from: ${queue}"
+        result=$( \
+            aws sqs receive-message \
+                --output=json \
+                --queue-url ${queue} \
+                --region ${region} \
+                --wait-time-seconds ${wait_time} \
+                --query Messages[0].[Body,ReceiptHandle])
+        if [ "$?" != 0 ]
+        then
+            exit 1
+        fi
 
-    receipt_handle=$(echo ${result} | jq -r '.[1]')
-    if [ "${receipt_handle}" = "null" ]
-    then
-    	echo "No Message Received"
-    	exit 0
-    fi
+        receipt_handle=$(echo ${result} | jq -r '.[1]')
+        if [ "${receipt_handle}" = "null" ]
+        then
+            echo "No Message Received"
+        fi
+    done
 
     playbook=$(echo ${result} | jq -r '.[0]|fromjson|.Message|fromjson|.playbook')
     s3_path=$(echo ${result} | jq -r '.[0]|fromjson|.Message|fromjson|.s3_path')
