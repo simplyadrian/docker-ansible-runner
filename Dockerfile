@@ -1,8 +1,8 @@
-FROM mgage/docker-ansible:alpine3.4
-USER ansible
+FROM mgage/docker-ansible:latest
 ADD runner.sh /ansible/runner.sh
-USER root
-RUN apk add bash jq &&\
-    chmod 700 /ansible/runner.sh && chown ansible:ansible /ansible/runner.sh
-USER ansible
+RUN apt-get update &&\
+     apt-get install -y jq &&\
+     pip install credstash==1.11.0 &&\
+     chmod 700 /ansible/runner.sh &&\
+     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 CMD /ansible/runner.sh
