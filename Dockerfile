@@ -1,8 +1,6 @@
 FROM mgage/docker-ansible:alpine3.4
-USER ansible
-ADD runner.sh /ansible/runner.sh
 USER root
+ADD runner.sh /ansible/runner.sh
 RUN apk add bash jq &&\
-    chmod 700 /ansible/runner.sh && chown ansible:ansible /ansible/runner.sh
-USER ansible
+    chmod 700 /ansible/runner.sh
 CMD /ansible/runner.sh
