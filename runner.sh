@@ -99,6 +99,12 @@ fi
 #run the playbook
 ansible-playbook ${ansible_options}
 
+#relinquish role
+if [ "${role}" != "null" ]
+then
+    unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_SECURITY_TOKEN
+fi
+
 #if configured with queue and successfully processed, delete message
 if [[ "$?" = 0 ]] && [[ "${queue}" != "null" ]]
 then
