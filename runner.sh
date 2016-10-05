@@ -9,6 +9,7 @@ s3_path=${S3_PATH:-null}
 role=${ROLE:-null}
 credstash_ssh_key=${CREDSTASH_SSH_KEY:-null}
 credstash_ssh_key_con=${CREDSTASH_SSH_KEY_CON:-null}
+credstash_slack_url=${CREDSTASH_SLACK_URL:-null}
 
 #if configured with queue
 if [ "${queue}" != "null" ]
@@ -94,6 +95,12 @@ then
     credstash -r ${region} get -n ${credstash_ssh_key} ${credstash_ssh_key_con} > ./credstash_ssh_key
     chmod 600 ./credstash_ssh_key
     ansible_options+=" --key-file=./credstash_ssh_key"
+fi
+
+#set slack secret if CREDSTASH_SLACK_URL
+if [ "${credstash_slack_url}" != "null" ]
+then
+   export SLACK_WEBHOOK_URL=$(credstash -r ${region} get -n ${credstash_slack_url})
 fi
 
 #run the playbook
