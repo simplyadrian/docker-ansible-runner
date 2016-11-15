@@ -17,7 +17,6 @@ then
     receipt_handle="null"
     while [ "${receipt_handle}" = "null" ]; do
     # Fetch message and extract the s3_path, playbook, role, etc
-        echo "attempting to fetch message from: ${queue}"
         result=$( \
             aws sqs receive-message \
                 --output=json \
@@ -31,11 +30,9 @@ then
         fi
 
         receipt_handle=$(echo ${result} | jq -r '.[1]')
-        if [ "${receipt_handle}" = "null" ]
-        then
-            echo "No Message Received"
-        fi
     done
+
+    echo "Receipt Handle: ${receipt_handle}"
 
     playbook=$(echo ${result} | jq -r '.[0]|fromjson|.Message|fromjson|.playbook')
     s3_path=$(echo ${result} | jq -r '.[0]|fromjson|.Message|fromjson|.s3_path')
@@ -44,6 +41,12 @@ then
     inventory=$(echo ${result} | jq -r '.[0]|fromjson|.Message|fromjson|.inventory')
     credstash_ssh_key=$(echo ${result} | jq -r '.[0]|fromjson|.Message|fromjson|.credstash_ssh_key')
     credstash_ssh_key_con=$(echo ${result} | jq -r '.[0]|fromjson|.Message|fromjson|.credstash_ssh_key_con')
+fi
+
+#set slack secret if CREDSTASH_SLACK_URL
+if [ "${credstash_slack_url}" != "null" ]
+then
+   export SLACK_WEBHOOK_URL=$(credstash -r ${region} get -n ${credstash_slack_url})
 fi
 
 #assume role
@@ -95,12 +98,6 @@ then
     credstash -r ${region} get -n ${credstash_ssh_key} ${credstash_ssh_key_con} > ./credstash_ssh_key
     chmod 600 ./credstash_ssh_key
     ansible_options+=" --key-file=./credstash_ssh_key"
-fi
-
-#set slack secret if CREDSTASH_SLACK_URL
-if [ "${credstash_slack_url}" != "null" ]
-then
-   export SLACK_WEBHOOK_URL=$(credstash -r ${region} get -n ${credstash_slack_url})
 fi
 
 #run the playbook
