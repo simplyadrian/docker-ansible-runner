@@ -5,7 +5,6 @@ USER root
 RUN apk update &&\
     apk add bash jq &&\
     pip install prettytable &&\
-    aws configure set preview.cloudfront true &&\
     chmod 700 /ansible/runner.sh && chown ansible:ansible /ansible/runner.sh
 USER ansible
 CMD /ansible/runner.sh
